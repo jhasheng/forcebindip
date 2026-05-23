@@ -1,14 +1,10 @@
 name: CI
 
-permissions:
-  contents: write
-
 on:
   push:
     branches:
-      - "**"
-    tags:
-      - "v*"
+      - main
+      - "dev/**"
   pull_request:
 
 jobs:
@@ -36,43 +32,3 @@ jobs:
 
       - name: Smoke test
         run: .\build-${{ matrix.arch }}\Release\forcebindip_cpp.exe --version
-
-      - name: Package
-        shell: pwsh
-        run: |
-          $version = (Get-Content VERSION -Raw).Trim()
-          $stage = "dist\forcebindip_cpp-$version-${{ matrix.arch }}"
-          New-Item -ItemType Directory -Force -Path $stage | Out-Null
-          Copy-Item "build-${{ matrix.arch }}\Release\forcebindip_cpp.exe" $stage
-          Copy-Item "build-${{ matrix.arch }}\Release\bindip_hook.dll" $stage
-          Copy-Item "forcebindip_cpp.example.ini" $stage
-          Copy-Item "README.md" $stage
-          Compress-Archive -Path $stage -DestinationPath "$stage.zip" -Force
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: forcebindip_cpp-${{ matrix.arch }}
-          path: dist/*.zip
-
-  release:
-    name: GitHub Release
-    runs-on: windows-latest
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-
-      - name: Create release
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "${{ github.ref_name }}" dist\*.zip `
-            --title "${{ github.ref_name }}" `
-            --notes "Release ${{ github.ref_name }}"
