@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  pull_request:
+
+jobs:
+  build:
+    name: Windows ${{ matrix.arch }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            cmake_arch: x64
+          - arch: x86
+            cmake_arch: Win32
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build-${{ matrix.arch }} -A ${{ matrix.cmake_arch }}
+
+      - name: Build
+        run: cmake --build build-${{ matrix.arch }} --config Release
+
+      - name: Smoke test
+        run: .\build-${{ matrix.arch }}\Release\forcebindip_cpp.exe --version
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $stage = "dist\forcebindip_cpp-$version-${{ matrix.arch }}"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item "build-${{ matrix.arch }}\Release\forcebindip_cpp.exe" $stage
+          Copy-Item "build-${{ matrix.arch }}\Release\bindip_hook.dll" $stage
+          Copy-Item "forcebindip_cpp.example.ini" $stage
+          Copy-Item "README.md" $stage
+          Compress-Archive -Path $stage -DestinationPath "$stage.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forcebindip_cpp-${{ matrix.arch }}
+          path: dist/*.zip

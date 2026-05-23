@@ -11,6 +11,9 @@ elevation, or process protection.
 
 ## Build
 
+Version is managed by the root `VERSION` file. CMake reads this file and embeds
+the value into `forcebindip_cpp.exe`, `bindip_hook.dll`, and `--version` output.
+
 Build the same architecture as the target process:
 
 ```powershell
@@ -31,6 +34,12 @@ List available interfaces:
 
 ```powershell
 .\tools\forcebindip_cpp\build-x64\Release\forcebindip_cpp.exe --list-ifaces
+```
+
+Print version:
+
+```powershell
+.\tools\forcebindip_cpp\build-x64\Release\forcebindip_cpp.exe --version
 ```
 
 Start by interface name, description, or GUID:
@@ -80,3 +89,10 @@ args=-window -opengl
   to `bind(<configured-ip>:6112)`.
 - If the game obtains Winsock functions dynamically with `GetProcAddress`, this
   minimal IAT hook may not catch that path.
+
+## CI
+
+GitHub Actions builds both Windows x64 and x86 Release artifacts on every push
+and pull request. The workflow packages `forcebindip_cpp.exe`,
+`bindip_hook.dll`, the example config, and this README as downloadable zip
+artifacts.

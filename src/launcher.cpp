@@ -4,6 +4,8 @@
 #include <shellapi.h>
 #include <windows.h>
 
+#include "forcebindip_version.h"
+
 #include <algorithm>
 #include <cwctype>
 #include <filesystem>
@@ -26,6 +28,7 @@ struct Options {
     std::wstring cwd;
     std::vector<std::wstring> args;
     bool list_ifaces = false;
+    bool show_version = false;
 };
 
 struct InterfaceAddress {
@@ -177,7 +180,8 @@ void PrintUsage()
     std::wcerr
         << L"usage:\n"
         << L"  forcebindip_cpp.exe [--config <file>] [--ip <ipv4>|--iface <name|description|guid>] [--dll <bindip_hook.dll>] [--cwd <dir>] -- <exe> [args...]\n"
-        << L"  forcebindip_cpp.exe --list-ifaces\n";
+        << L"  forcebindip_cpp.exe --list-ifaces\n"
+        << L"  forcebindip_cpp.exe --version\n";
 }
 
 std::optional<std::wstring> FindConfigArg(int argc, wchar_t** argv)
@@ -406,6 +410,10 @@ bool ParseArgs(int argc, wchar_t** argv, Options& options)
             options.list_ifaces = true;
             continue;
         }
+        if (arg == L"--version") {
+            options.show_version = true;
+            continue;
+        }
         if (arg == L"--help" || arg == L"-h") {
             return false;
         }
@@ -429,7 +437,7 @@ bool ParseArgs(int argc, wchar_t** argv, Options& options)
         options.dll_path = (CurrentExeDirectory() / L"bindip_hook.dll").wstring();
     }
 
-    if (options.list_ifaces) {
+    if (options.show_version || options.list_ifaces) {
         return true;
     }
 
@@ -581,6 +589,11 @@ int wmain(int argc, wchar_t** argv)
     if (! ParseArgs(argc, argv, options)) {
         PrintUsage();
         return 2;
+    }
+
+    if (options.show_version) {
+        std::wcout << L"forcebindip_cpp " << FORCEBINDIP_VERSION_W << L"\n";
+        return 0;
     }
 
     if (options.list_ifaces) {
