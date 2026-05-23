@@ -55,7 +55,13 @@ Use a config file:
 ```
 
 If `forcebindip_cpp.ini` exists next to `forcebindip_cpp.exe`, it is loaded by
-default. Command line values override config values.
+default. Create this file yourself and use `forcebindip_cpp.example.ini` as the
+template. Command line values override config values.
+
+```powershell
+Copy-Item .\forcebindip_cpp.example.ini .\forcebindip_cpp.ini
+.\forcebindip_cpp.exe
+```
 
 Start by explicit IP:
 
@@ -92,7 +98,7 @@ args=-window -opengl
 
 ## CI
 
-GitHub Actions builds both Windows x64 and x86 Release artifacts on every push
-and pull request. The workflow packages `forcebindip_cpp.exe`,
-`bindip_hook.dll`, the example config, and this README as downloadable zip
-artifacts.
+GitHub Actions builds both Windows x64 and x86 Release configurations on branch
+pushes and pull requests. The release workflow runs only for version tags and
+packages `forcebindip_cpp.exe`, `bindip_hook.dll`, the example config, and this
+README as downloadable zip artifacts.
